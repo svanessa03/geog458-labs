@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset='utf-8' />
+    // Sets the title of the map (Title in browser tab)
+    <title>my First Map</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1' />
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.js"></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+   </style>
+</head>
+<body>
+   <div id='map'></div>
+   <script>
+      mapboxgl.accessToken = 'pk.eyJ1Ijoic2NhbXBiMiIsImEiOiJjbXY5dGJ1MmYwMDBtMnlva3plaDF1d3V3In0.eBz4Mdtp8Pdi6yDmVY590g';
+      const mymap = new mapboxgl.Map({
+            // Set the container ID for the map
+             container: 'map',
+             // Set the map style for the map
+             //style: 'mapbox://styles/mapbox/streets-v12',
+             // Set the map projection to globe
+             //projection: 'globe', //Display the map as a globe since satellite-v9 defaults to Mercator
+             // Set the center coordinates for the map
+             center: [-122.3098475, 47.5775987],
+             // Set the zoom level for the map
+             zoom:15.5
+          });
+mymap.on('style.load', () => {
+    mymap.setConfigProperty('basemap', 'lightPreset', 'dusk');
+    mymap.setConfigProperty('basemap', 'showPointOfInterestLabels', false);
+    // Set the font for the labels to Alegreya SC
+    // I changed the font because I thought it was more readable and clean.
+    mymap.setConfigProperty('basemap', 'font', 'Alegreya SC');
+    // Hide the road labels on the map
+    // I hid the road labels because I thought it was too distracting.
+    mymap.setConfigProperty('basemap', 'showRoadLabels', false);
+});       
+// Add fullscreencontrols to the map.
+mymap.addControl(new mapboxgl.FullscreenControl());
+// Add navigation controls (zoom and compass) to the map.
+mymap.addControl(new mapboxgl.NavigationControl());
+</script>
+</body>
+</html>
