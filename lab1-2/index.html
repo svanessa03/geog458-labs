@@ -15,7 +15,9 @@
 <body>
    <div id='map'></div>
    <script>
+    // Sets the access token for Mapbox
       mapboxgl.accessToken = 'pk.eyJ1Ijoic2NhbXBiMiIsImEiOiJjbXY5dGJ1MmYwMDBtMnlva3plaDF1d3V3In0.eBz4Mdtp8Pdi6yDmVY590g';
+      // Initializes the Mapbox and render the map inside the 'mymap' element.
       const mymap = new mapboxgl.Map({
             // Set the container ID for the map
              container: 'map',
@@ -29,18 +31,20 @@
              zoom:15.5
           });
 mymap.on('style.load', () => {
+    // Sets the basemap to lightPreset dusk
     mymap.setConfigProperty('basemap', 'lightPreset', 'dusk');
+    // Hides the point of interest labels
     mymap.setConfigProperty('basemap', 'showPointOfInterestLabels', false);
-    // Set the font for the labels to Alegreya SC
+    // Sets the font for the labels to Alegreya SC
     // I changed the font because I thought it was more readable and clean.
     mymap.setConfigProperty('basemap', 'font', 'Alegreya SC');
-    // Hide the road labels on the map
+    // Hides the road labels on the map
     // I hid the road labels because I thought it was too distracting.
     mymap.setConfigProperty('basemap', 'showRoadLabels', false);
 });       
-// Add fullscreencontrols to the map.
+// Adds fullscreencontrols to the map.
 mymap.addControl(new mapboxgl.FullscreenControl());
-// Add navigation controls (zoom and compass) to the map.
+// Adds navigation controls (zoom and compass) to the map.
 mymap.addControl(new mapboxgl.NavigationControl());
 </script>
 </body>
