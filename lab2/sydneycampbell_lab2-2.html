@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Top World City Population Map</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.js"></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+        #legend {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 110px;
+            background: #fff;
+            margin-right: 20px;
+            margin-bottom: 40px;
+            padding: 10px 20px 10px 10px;
+            border-radius: 3px;
+            text-align: center;
+        }
+
+        .break {
+            position: relative;
+            margin: 0;
+            padding: 0;
+        }
+
+        .dot {
+            display: inline-block;
+            margin-top: 5px;
+            border-radius: 50%;
+            opacity: 1;
+        }
+
+        .dot-label {
+            position: absolute;
+            top: 0;
+            right: 0;
+            font-style: italic;
+        }
+
+        #legend a {
+            color: black;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <div id="legend"></div>
+    <script>
+        mapboxgl.accessToken = 'pk.eyJ1Ijoic2NhbXBiMiIsImEiOiJjbXY5dGJ1MmYwMDBtMnlva3plaDF1d3V3In0.eBz4Mdtp8Pdi6yDmVY590g';
+        const mymap = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/standard',
+            projection: 'globe',
+            center: [-96, 37.8],
+            zoom: 1
+        });
+
+        mymap.on('style.load', () => {
+            mymap.setFog({});
+        });
+
+        mymap.on('load', () => {
+            mymap.addSource('world-cities', {
+                type: 'geojson',
+                data: 'data/world-cities.geojson'
+            });
+
+            mymap.addLayer({
+                id: 'world-cities-layer',
+                type: 'circle',
+                source: 'world-cities',
+                paint: {
+                    'circle-radius': [
+                        'interpolate', ['linear'],
+                        ['to-number', ['get', 'population'], 0],
+                        100000,    0.7,
+                        500000,  2,
+                        1000000,    4,
+                        1500000,  5,
+                        2000000,    6,
+                        2500000,  7,
+                        3000000,  9,
+                        6500000,  15,
+                        8500000,  17,
+                        10500000, 20
+                    ],
+                    'circle-stroke-width': 1,
+                    'circle-color': [
+                        'interpolate', ['linear'],
+                        ['to-number', ['get', 'population'], 0],
+                        100000,    '#fff7ec',
+                        500000,  '#fff7f3',
+                        1000000,    '#fde0dd',
+                        1500000,  '#fcc5c0',
+                        2000000,    '#fa9fb5',
+                        2500000,  '#f768a1',
+                        3000000,  '#dd3497',
+                        6500000,  '#ae017e',
+                        8500000,  '#7a0177',
+                        10500000, '#49006a'
+                    ],
+                    'circle-stroke-color': 'gray'
+                }
+            });
+
+            mymap.on('click', 'world-cities-layer', (event) => {
+                const feature = event.features[0];
+                const coordinates = feature.geometry.coordinates.slice(0, 2);
+
+                new mapboxgl.Popup()
+                .setLngLat(coordinates)
+                .setHTML(`<strong>City:</strong> ${feature.properties.city}`)
+                .addTo(mymap);
+            });
+        });
+
+        const legend = document.getElementById('legend');
+        const grades = [100000, 6500000, 10500000];
+        const radii = [0.7, 15, 20];
+        const colors = ['##fff7ec', '#ae017e', '#49006a'];
+        const labels = ['<strong>City Population:</strong>'];
+
+        for (let i = 0; i < grades.length; i++) {
+            const value = grades[i];
+            const diameter = 2 * radii[i];
+
+            labels.push(
+                '<p class="break"><i class="dot" style="background:' + colors[i] +
+                '; width:' + diameter + 'px; height:' + diameter +
+                'px;"></i> <span class="dot-label" style="top:' +
+                diameter / 2 + 'px;">' + value + '</span></p>'
+            );
+        }
+
+        const source =
+            '<p style="text-align:right; font-size:10pt;">Source: ' +
+            '<a href="data/world-cities.geojson">World Cities Data Source</a></p>';
+
+        legend.innerHTML = labels.join('') + source;
+
+        mymap.addControl(new mapboxgl.FullscreenControl());
+
+        mymap.addControl(new mapboxgl.NavigationControl());
+    </script>
+    
+</body>
+
+</html>
