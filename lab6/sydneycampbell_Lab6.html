@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Lab 6 | Smart Dashboard</title>
+  <title>Lab 6 | Household Population</title>
   <link href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" rel="stylesheet">
   <script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
   <script src="https://d3js.org/d3.v7.min.js"></script>
@@ -46,8 +46,8 @@
 </head>
 <body>
   <aside id="sidebar">
-    <h1>Smart Dashboard</h1>
-    <p>Washington county population, 2000–2020</p>
+    <h1>Household Population in Washington</h1>
+    <p>Washington Counties Household Population, 2000–2020</p>
     <p class="muted">Hover to preview. Click a county to pin it. Click empty map space or outside the map to unpin it.</p>
     <div id="county-filter">
       <label for="county-search">Find a county</label>
@@ -58,18 +58,18 @@
     </div>
     <div aria-live="polite">
       <h2 id="placename">Washington</h2>
-      <p class="muted">Population in 2020 · <span id="selection-mode">All counties</span></p>
+      <p class="muted">Household Population in 2020 · <span id="selection-mode">All counties</span></p>
       <p id="county-count">Loading…</p>
     </div>
-    <h2 style="font-size:17px">Population trend</h2>
+    <h2 style="font-size:17px">Household Population trend</h2>
     <div id="county-chart"></div>
     <p id="chart-note">The linked D3 graph will be connected in Step 4.</p>
     <p id="status" role="status">Loading map and WAcounties.geojson…</p>
-    <p class="muted">Map colors show total population in 2020, not population density. The data are historical; this dashboard is not a live monitoring feed.</p>
+    <p class="muted">Map colors show total household population in 2020, not population density. The data are historical; this dashboard is not a live monitoring feed.</p>
   </aside>
-  <main id="map-panel" aria-label="Washington county population map">
+  <main id="map-panel" aria-label="Washington county household population map">
     <div id="map"></div>
-    <div id="legend"><h2>Population in 2020</h2></div>
+    <div id="legend"><h2>Household Population in 2020</h2></div>
   </main>
   <script>
     mapboxgl.accessToken = 'pk.eyJ1Ijoic2NhbXBiMiIsImEiOiJjbXY5dGJ1MmYwMDBtMnlva3plaDF1d3V3In0.eBz4Mdtp8Pdi6yDmVY590g';
@@ -89,13 +89,13 @@
         const data = await d3.json('./WAcounties.geojson');
         const counties = data.features;
         const classes = [
-          {min: 0, color: '#edf8fb', label: 'Under 25,000'},
-          {min: 25000, color: '#b3cde3', label: '25,000–99,999'},
-          {min: 100000, color: '#8c96c6', label: '100,000–499,999'},
-          {min: 500000, color: '#8856a7', label: '500,000–999,999'},
-          {min: 1000000, color: '#810f7c', label: '1,000,000 or more'}
+          {min: 0, color: '#edf8fb', label: 'Under 100,000'},
+          {min: 100000, color: '#b3cde3', label: '100,000-210,000'},
+          {min: 210000, color: '#8c96c6', label: '210,000-315,000'},
+          {min: 315000, color: '#8856a7', label: '315,000-420,000'},
+          {min: 420000, color: '#810f7c', label: '420,000 or more'}
         ];
-        const fillColor = ['step', ['get', 'POP2020'], classes[0].color];
+        const fillColor = ['step', ['get', 'HHP2020'], classes[0].color];
         classes.slice(1).forEach(group => fillColor.push(group.min, group.color));
         map.addSource('population', {type: 'geojson', data: data});
         map.addLayer({id: 'county-fill', type: 'fill', source: 'population',
@@ -131,7 +131,7 @@
             : hoveredCounty ? [hoveredCounty] : matchingCounties;
           document.getElementById('placename').textContent = areaLabel(features);
           document.getElementById('county-count').textContent = features.length
-            ? d3.format(',')(d3.sum(features, feature => +feature.properties.POP2020)) : '—';
+            ? d3.format(',')(d3.sum(features, feature => +feature.properties.HHP2020)) : '—';
           document.getElementById('selection-mode').textContent = selectedCounty ? 'Pinned county'
             : hoveredCounty ? 'Hover preview' : features.length === counties.length ? 'All counties' : 'Search results';
           highlightCounties(features);
@@ -149,6 +149,11 @@
             ? ['==', ['get', 'OBJECTID'], -1] : inFocus);
         };
 
+        const popup = new mapboxgl.Popup({
+            closeButton: false,
+            closeOnClick: false
+        });
+
         map.on('mousemove', 'county-fill', function(event) {
         const id = event.features[0].properties.OBJECTID;
         const feature = matchingCounties.find(county => county.properties.OBJECTID === id) || null;
@@ -156,6 +161,7 @@
         if (selectedCounty || hoveredCounty === feature) return;
         hoveredCounty = feature;
         updateDashboard();
+        popup.setLngLat(event.lngLat).setHTML(feature.properties.NAMELSAD10).addTo(map);
         });
 
         map.on('mouseleave', 'county-fill', function() {
@@ -163,6 +169,7 @@
         if (selectedCounty || !hoveredCounty) return;
         hoveredCounty = null;
         updateDashboard();
+        popup.remove();
         });
 
         map.on('click', function(event) {
@@ -187,7 +194,7 @@
         updateDashboard();
         });
         // END STEP 2
-
+        
         // BEGIN STEP 3: SEARCH FILTER
         const search = document.getElementById('county-search');
         const options = document.getElementById('county-options');
@@ -283,7 +290,7 @@
         updateLinkedChart = function(features) {
         const label = areaLabel(features);
         document.getElementById('chart-note').textContent = features.length
-            ? label + ': annual population, 2000–2020. Multiple counties are summed; the y-axis starts at zero and rescales.'
+            ? label + ': annual Household Population, 2000–2020. Multiple counties are summed; the y-axis starts at zero and rescales.'
             : 'No matching counties. Clear or change the search to draw a graph.';
         svg.style('display', features.length ? 'block' : 'none');
         if (!features.length) return;
@@ -292,11 +299,11 @@
         const series = years.map(function(year) {
             return {
             year: year,
-            population: d3.sum(features, feature => +feature.properties['POP' + year])
+            population: d3.sum(features, feature => +feature.properties['HHP' + year])
             };
         });
-        chartTitle.text(label + ' population, 2000–2020');
-        svg.attr('aria-label', label + ' population trend from 2000 to 2020');
+        chartTitle.text(label + ' Household Population, 2000–2020');
+        svg.attr('aria-label', label + ' Household Population trend from 2000 to 2020');
         y.domain([0, d3.max(series, d => d.population) * 1.08]).nice();
         yAxis.call(d3.axisLeft(y).ticks(5).tickFormat(d3.format('~s')));
         path.datum(series).attr('d', line);
